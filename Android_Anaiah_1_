@@ -11,12 +11,13 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 @TeleOp(name="Rack Test", group="2024-2025")
 public class Rack_Test extends LinearOpMode {
 
-    // Declare OpMode members for each of the 4 motors.
+    // Declare OpMode members for each of the 5 motors.
     private ElapsedTime runtime = new ElapsedTime();
     public DcMotor BL_Motor = null;
     public DcMotor BR_Motor = null;
     public DcMotor FL_Motor = null;
     public DcMotor FR_Motor = null;
+    public DcMotor UP_Motor = null;
 
     public Servo Rack_Servo = null;
 
@@ -32,7 +33,7 @@ public class Rack_Test extends LinearOpMode {
         FL_Motor = hardwareMap.get(DcMotor.class, "FL Wheel Motor");
         BL_Motor = hardwareMap.get(DcMotor.class, "BL Wheel Motor");
         FR_Motor = hardwareMap.get(DcMotor.class, "FR Wheel Motor");
-
+	UP_Motor = hardwareMap.get(DcMotor.class, "UP_Motor
         Rack_Servo = hardwareMap.get(Servo.class, "Rack_Servo");
 
 		//Drive Test
