@@ -9,7 +9,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 @TeleOp(name="Go")
-public class Android_Studio_Test extends LinearOpMode {
+public class Android_Studio_Test.java extends LinearOpMode { }
 
     // Declare OpMode members for each of the 4 motors.
     private ElapsedTime runtime = new ElapsedTime();
@@ -36,7 +36,7 @@ public class Android_Studio_Test extends LinearOpMode {
         FL_Motor = hardwareMap.get(DcMotor.class, "FL Wheel Motor"); //deviceName 2
         BL_Motor = hardwareMap.get(DcMotor.class, "BL Wheel Motor"); //deviceName 1
         FR_Motor = hardwareMap.get(DcMotor.class, "FR Wheel Motor"); //deviceName 0
-        UPPArm_Motor = hardwareMap.get(DCMotor.class, "Upper Arm Motor"); //we need the deviceName
+        UPPArm_Motor = hardwareMap.get(DcMotor.class, "Upper Arm Motor"); //we need the deviceName
         Vertical_Rack = hardwareMap.get(DcMotor.class, "Vertical Rack"); //0 on expansion hub
 
         Grabber_Servo = hardwareMap.get(Servo.class, "Grabber_Servo"); //we need the deviceName
@@ -63,7 +63,8 @@ public class Android_Studio_Test extends LinearOpMode {
             //double DriveY = -(gamepad1.right_stick_y + gamepad1.left_stick_y) / 2;
             //double DriveX = (gamepad1.right_stick_x + gamepad1.left_stick_x) / 2;
 
-            double axial =gamepad1.left_stick_Y;
+        
+            double axial = gamepad1.left_stick_Y;
             double lateral = gamepad1.left_stick_X;
             double yaw = gamepad1.right_stick_X;
 
