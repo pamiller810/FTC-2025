@@ -17,7 +17,7 @@ public class Android_Studio_Test extends LinearOpMode {
     public DcMotor BR_Motor;
     public DcMotor FL_Motor;
     public DcMotor FR_Motor;
-    public DcMotor UPPArm_Motor:
+    public DcMotor UPPArm_Motor;
     public DcMotor Vertical_Rack;
 
     public Servo Grabber_Servo;
@@ -32,12 +32,12 @@ public class Android_Studio_Test extends LinearOpMode {
 
     @Override
     public void runOpMode() {
-        BR_Motor = hardwareMap.get(DcMotor.class,3 "BR Wheel Motor"); //deviceName 3
-        FL_Motor = hardwareMap.get(DcMotor.class,1 "FL Wheel Motor"); //deviceName 2
-        BL_Motor = hardwareMap.get(DcMotor.class,2 "BL Wheel Motor"); //deviceName 1
-        FR_Motor = hardwareMap.get(DcMotor.class,0 "FR Wheel Motor"); //deviceName 0
-        UPPArm_Motor = hardwareMap.get(DCMotor,class, "Upper Arm Motor"); //we need the deviceName
-        Vertical_Rack = hardwareMap.get(DcMotor.class,0 "Vertical Rack"); //0 on expansion hub
+        BR_Motor = hardwareMap.get(DcMotor.class, "BR Wheel Motor"); //deviceName 3
+        FL_Motor = hardwareMap.get(DcMotor.class, "FL Wheel Motor"); //deviceName 2
+        BL_Motor = hardwareMap.get(DcMotor.class, "BL Wheel Motor"); //deviceName 1
+        FR_Motor = hardwareMap.get(DcMotor.class, "FR Wheel Motor"); //deviceName 0
+        UPPArm_Motor = hardwareMap.get(DCMotor.class, "Upper Arm Motor"); //we need the deviceName
+        Vertical_Rack = hardwareMap.get(DcMotor.class, "Vertical Rack"); //0 on expansion hub
 
         Grabber_Servo = hardwareMap.get(Servo.class, "Grabber_Servo"); //we need the deviceName
 
