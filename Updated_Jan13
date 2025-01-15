@@ -113,6 +113,15 @@ public class Android_Studio_Test extends LinearOpMode {
             } else if (gamepad2.a) {
                 Grabber_Servo.setPosition(GRABBER_OPEN);
             }
+            //Rack Servo Control
+            if (gamepad2.dpad_up) {
+                Rack_Servo.setPosition(1);//Move Rack_Servo to the up position (adjust if necessary)
+            } else if (gamepad2.dpad_down) {
+                Rack_Servo.setPosition(0); //Move Rack_Servo to the down position (adjust if necessary)
+            }
+
+
+            }
 
             // Telemetry
             telemetry.addData("Rack Position", Vertical_Rack.getCurrentPosition());
@@ -121,4 +130,5 @@ public class Android_Studio_Test extends LinearOpMode {
             telemetry.update();
         }
     }
-}
+
+
