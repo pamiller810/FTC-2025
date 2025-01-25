@@ -5,13 +5,16 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-@TeleOp(name="Go")
-public class Android_Studio_Test.java extends LinearOpMode { }
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 
-    // Declare OpMode members for each of the 4 motors.
+@TeleOp(name = "Go")
+public class Android_Studio_Test extends LinearOpMode {
+
+    // Declare OpMode members
     private ElapsedTime runtime = new ElapsedTime();
     public DcMotor BL_Motor;
     public DcMotor BR_Motor;
@@ -20,113 +23,148 @@ public class Android_Studio_Test.java extends LinearOpMode { }
     public DcMotor UPPArm_Motor;
     public DcMotor Vertical_Rack;
 
+    public CRServo Rack_Servo;
     public Servo Grabber_Servo;
 
-    public int maxVerticalRackHeight = 1818;
-    public int minVerticalRackHeight = 0;
+    private final int maxVerticalRackHeight = 1818;
+    private final int minVerticalRackHeight = 0;
 
-    public double Rack_Pos = 0.0;
-    public double Rack_inc = 0.05;
-    public boolean dpad_latch_right = false;
-    public boolean dpad_latch_left = false;
+    private final double GRABBER_CLOSED = 0.0; // Closed position
+    private final double GRABBER_OPEN = 1.0; // Open position
+
+    private final double gearTurnAmount = 0.05; //Amount to move the servo per button press (adjust as needed)
+
+    private final double maxGearPosition = 1.0; // Maximum position for the servo (full turn, fully clockwise)
+    private final double minGearPosition = 0.0; // Minimum position for the servo (full turn, fully counter-clockwise)
+
+    public Android_Studio_Test(HardwareMap hardwareMap, Telemetry telemetry) {
+    }
 
     @Override
     public void runOpMode() {
-        BR_Motor = hardwareMap.get(DcMotor.class, "BR Wheel Motor"); //deviceName 3
-        FL_Motor = hardwareMap.get(DcMotor.class, "FL Wheel Motor"); //deviceName 2
-        BL_Motor = hardwareMap.get(DcMotor.class, "BL Wheel Motor"); //deviceName 1
-        FR_Motor = hardwareMap.get(DcMotor.class, "FR Wheel Motor"); //deviceName 0
-        UPPArm_Motor = hardwareMap.get(DcMotor.class, "Upper Arm Motor"); //we need the deviceName
-        Vertical_Rack = hardwareMap.get(DcMotor.class, "Vertical Rack"); //0 on expansion hub
+        // Hardware Mapping
+        BR_Motor = hardwareMap.get(DcMotor.class, "BR Wheel Motor");
+        if (BR_Motor == null) {
+            telemetry.addData("Error", "BR Wheel Motor not found.");
+            return;
+        }
 
-        Grabber_Servo = hardwareMap.get(Servo.class, "Grabber_Servo"); //we need the deviceName
+        FL_Motor = hardwareMap.get(DcMotor.class, "FL Wheel Motor");
+        BL_Motor = hardwareMap.get(DcMotor.class, "BL Wheel Motor");
+        FR_Motor = hardwareMap.get(DcMotor.class, "FR Wheel Motor");
+        UPPArm_Motor = hardwareMap.get(DcMotor.class, "Upper Arm Motor");
+        Vertical_Rack = hardwareMap.get(DcMotor.class, "Vertical Rack");
+        Grabber_Servo = hardwareMap.get(Servo.class, "Grabber_Servo");
+        Rack_Servo = hardwareMap.get(CRServo.class, "Rack_Servo");
 
+        // Reset and configure vertical rack encoder
         Vertical_Rack.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         Vertical_Rack.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
+        // Motor direction configuration
         BR_Motor.setDirection(DcMotorSimple.Direction.FORWARD);
         FR_Motor.setDirection(DcMotorSimple.Direction.FORWARD);
         BL_Motor.setDirection(DcMotorSimple.Direction.REVERSE);
         FL_Motor.setDirection(DcMotorSimple.Direction.REVERSE);
 
-        boolean intakeIn = false;
-        boolean grabbing = false;
+        // Ensure that the UPPArm_Motor direction is correct
+        UPPArm_Motor.setDirection(DcMotorSimple.Direction.FORWARD); // Or REVERSE depending on your setup
 
         // Wait for the game to start (driver presses PLAY)
-
         waitForStart();
         runtime.reset();
 
-        // run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
-            //double Horizontal = gamepad1.right_trigger + -gamepad1.left_trigger;
-            //double DriveY = -(gamepad1.right_stick_y + gamepad1.left_stick_y) / 2;
-            //double DriveX = (gamepad1.right_stick_x + gamepad1.left_stick_x) / 2;
+            // Mecanum drive calculations
+            double axial = gamepad1.left_stick_y; // Forward/backward
+            double lateral = -gamepad1.left_stick_x; // Left/right
+            double yaw = -gamepad1.right_stick_x; // Rotation
 
-        
-            double axial = gamepad1.left_stick_Y;
-            double lateral = gamepad1.left_stick_X;
-            double yaw = gamepad1.right_stick_X;
+            double leftFrontPower = axial + lateral + yaw;
+            double rightFrontPower = axial - lateral - yaw;
+            double leftBackPower = axial - lateral + yaw;
+            double rightBackPower = axial + lateral - yaw;
 
-            double leftFrontPower = axial + Lateral + yaw;
-            double rightFrontPower = axial - Lateral - yaw;
-            double leftBackPower = axial - Lateral + yaw;
-            double rightBackPower = axial + Lateral - yaw;
+            // Normalize the powers
+            double maxPower = Math.max(Math.abs(leftFrontPower), Math.abs(rightFrontPower));
+            maxPower = Math.max(maxPower, Math.abs(leftBackPower));
+            maxPower = Math.max(maxPower, Math.abs(rightBackPower));
 
-            // Normalize the values so no wheel power exceeds 100%
-            // This ensures that the robot maintains the desired motion.
-            double max = Math.max(Math.abs(leftFrontPower),Math.abs(rightFrontPower));
-            max = Math.max(max, Math.abs(leftBackPower));
-            max = Math.max(max, Math.abs(rightBackPower));
-
-            if (max > 1.0) {
-                leftFrontPower /= max;
-                rightFrontPower /= max;
-                leftBackPower /= max;
-                rightBackPower /= max;
+            if (maxPower > 1.0) {
+                leftFrontPower /= maxPower;
+                rightFrontPower /= maxPower;
+                leftBackPower /= maxPower;
+                rightBackPower /= maxPower;
             }
 
-            // Send calculated power to wheels
+            // Set motor powers
             FL_Motor.setPower(leftFrontPower);
             FR_Motor.setPower(rightFrontPower);
             BL_Motor.setPower(leftBackPower);
             BR_Motor.setPower(rightBackPower);
 
-            // Crane motion idk they did this so not me // Crane motion idk they did this so not me // Crane motion idk they did this so not me //
+            // Vertical Rack Control with Limits and Adjusted Speed
+            double verticalRackSpeed = (gamepad2.right_trigger - gamepad2.left_trigger); // Full range of -1 to 1
 
-            double verticalRackSpeed = (gamepad2.right_trigger - gamepad2.left_trigger);
-
-//            if (Vertical_Rack.getCurrentPosition() < minVerticalRackHeight) {
-//                Vertical_Rack.setPower(1);
-//            } else if (Vertical_Rack.getCurrentPosition() > maxVerticalRackHeight) {
-//                Vertical_Rack.setPower(-1);
-//            } else {
-                Vertical_Rack.setPower(verticalRackSpeed);
-//            }
-
-
-
-//            Rack_Motor.setPower(gamepad2.right_trigger - gamepad2.left_trigger);
-//            Rack_Servo.setPower(gamepad2.right_stick_y);
-
-            // Spinning Intake // Spinning Intake // Spinning Intake // Spinning Intake // Spinning Intake // Spinning Intake // Spinning Intake //
-
-            if (gamepad2.y) {
-                grabbing = true;
-            } else if (gamepad2.x) {
-                grabbing = false;
+            // Ensure correct movement direction for the Vertical Rack Motor
+            if (Vertical_Rack.getCurrentPosition() <= minVerticalRackHeight && verticalRackSpeed < 0) {
+                verticalRackSpeed = 0; // Prevent going below minimum
+            } else if (Vertical_Rack.getCurrentPosition() >= maxVerticalRackHeight && verticalRackSpeed > 0) {
+                verticalRackSpeed = 0; // Prevent going above maximum
             }
 
-            if (grabbing) {
-                Grabber_Servo.setPosition(0);
-            } else {
+            Vertical_Rack.setPower(verticalRackSpeed);
+
+            // UPPArm Control with Limits
+            double uppArmSpeed = -gamepad2.right_stick_y * 0.5; // Adjust speed and invert Y-axis for correct movement direction
+
+            // Optional: Add position limits for the UPPArm_Motor (if needed)
+            if (UPPArm_Motor.getCurrentPosition() <= 0 && uppArmSpeed < 0) {
+                uppArmSpeed = 0; // Prevent moving below 0 (down limit)
+            } else if (UPPArm_Motor.getCurrentPosition() >= 1000 && uppArmSpeed > 0) { // Replace 1000 with your own upper limit
+                uppArmSpeed = 0; // Prevent moving above max height (up limit)
+            }
+
+            UPPArm_Motor.setPower(uppArmSpeed);
+
+            // Gradual Grabber Control (Open/Close with Triggers)
+            double grabberPosition = GRABBER_CLOSED + (gamepad2.right_trigger * (GRABBER_OPEN - GRABBER_CLOSED));
+//            Grabber_Servo.setPosition(grabberPosition);
+//
+//            // Gradual Gear Turn Control with Rack Servo
+//            double rackServoPosition = Rack_Servo.getPosition(); //Get the current position of the servo
+
+            //Control rack servo using triggers or buttons for incremental movement
+
+            if (gamepad2.left_stick_y > 0.1) {
+                //move the gear clockwise (incremental movements)
+                Rack_Servo.setPower(0.5);
+
+            } else if (gamepad2.left_stick_y < -0.1) {
+                //move the gear counter-clockwise (decremental movements)
+                Rack_Servo.setPower(-0.5);
+//                rackServoPosition = Math.max(minGearPosition, rackServoPosition - gearTurnAmount);
+            }
+            else {
+                Rack_Servo.setPower(0);
+            }
+
+            if(gamepad2.a) {
+                // Open Grabber servo
+                Grabber_Servo.setPosition(0.7);
+            }
+            else if(gamepad2.y) {
+                // Close Grabber Servo
                 Grabber_Servo.setPosition(1);
             }
 
-            // Show the elapsed game time and wheel power.
+//            Rack_Servo.setPosition(rackServoPosition); // Set the servo to the new position
+
+            // Telemetry for debugging
             telemetry.addData("Rack Position", Vertical_Rack.getCurrentPosition());
+            telemetry.addData("Arm Position", UPPArm_Motor.getCurrentPosition()); // Display arm position
+            telemetry.addData("Runtime", runtime.seconds());
             telemetry.update();
         }
     }
 }
-
