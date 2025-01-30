@@ -120,9 +120,9 @@ public class Android_Studio_Test extends LinearOpMode {
             double uppArmSpeed = -gamepad2.right_stick_y * 0.75; // Adjust speed and invert Y-axis for correct movement direction
 
             // Optional: Add position limits for the UPPArm_Motor (if needed)
-            if (UPPArm_Motor.getCurrentPosition() <= -388 && uppArmSpeed < 0) {
+            if (UPPArm_Motor.getCurrentPosition() <= 0 && uppArmSpeed < 0) {
                 uppArmSpeed = 0; // Prevent moving below 0 (down limit)
-            } else if (UPPArm_Motor.getCurrentPosition() >= 20 && uppArmSpeed > 0) { // Replace 1000 with your own upper limit
+            } else if (UPPArm_Motor.getCurrentPosition() >= 388 && uppArmSpeed > 0) { // Replace 1000 with your own upper limit
                 uppArmSpeed = 0; // Prevent moving above max height (up limit)
             }
 
