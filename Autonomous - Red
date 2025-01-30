@@ -1,1 +1,168 @@
+package org.firstinspires.ftc.teamcode;
+
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.util.ElapsedTime;
+
+@Autonomous(name="Autonomous Program", group="Concept")
+public class AutonomousProgram extends LinearOpMode {
+
+    private DcMotor leftFrontDrive = null;
+    private DcMotor rightFrontDrive = null;
+    private DcMotor leftBackDrive = null;
+    private DcMotor rightBackDrive = null;
+
+    private ElapsedTime runtime = new ElapsedTime();
+
+    static final double     COUNTS_PER_INCH         = 537.7 ; // Example: Adjust based on your robot's encoder counts per inch.  **VERY IMPORTANT TO CALIBRATE**
+    static final double     DRIVE_SPEED             = 0.6;
+    static final double     TURN_SPEED              = 0.4;
+
+    @Override
+    public void runOpMode() {
+
+        // Initialize the drive system variables.
+        leftFrontDrive  = hardwareMap.get(DcMotor.class, "left_front_drive");
+        rightFrontDrive = hardwareMap.get(DcMotor.class, "right_front_drive");
+        leftBackDrive  = hardwareMap.get(DcMotor.class, "left_back_drive");
+        rightBackDrive = hardwareMap.get(DcMotor.class, "right_back_drive");
+
+        // Set motor direction (adjust if needed for your robot)
+        leftFrontDrive.setDirection(DcMotor.Direction.FORWARD);
+        rightFrontDrive.setDirection(DcMotor.Direction.REVERSE);
+        leftBackDrive.setDirection(DcMotor.Direction.FORWARD);
+        rightBackDrive.setDirection(DcMotor.Direction.REVERSE);
+
+        waitForStart();
+
+        // 1. Move forward 8 inches
+        encoderDrive(DRIVE_SPEED, 8, 8, 5.0); // 5 second timeout
+
+        // 2. Turn right 90 degrees
+        turn(TURN_SPEED, -90, 4.0); // Negative for right turn (adjust if needed)
+
+        // 3. Move forward 41 inches
+        encoderDrive(DRIVE_SPEED, 41, 41, 6.0); // 6 second timeout
+
+        // 4. Turn right 90 degrees
+        turn(TURN_SPEED, -90, 4.0); // Negative for right turn (adjust if needed)
+
+        // 5. Move forward 7 inches
+        encoderDrive(DRIVE_SPEED, 7, 7, 5.0); // 5 second timeout
+
+        // 6. Stop (implicit after encoderDrive finishes)
+        telemetry.addData("Path", "Complete");
+        telemetry.update();
+        sleep(1000);
+    }
+
+
+    public void turn(double speed, double degrees, double timeoutS) {
+        // ... (Same turn method as the previous example.  Just make sure the sign of the speed is correct for your robot's turning direction.)
+        runtime.reset();
+        double targetCounts = degrees * 14.4; //Example:  Adjust this value!  It's counts per degree.
+
+        leftFrontDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        rightFrontDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        leftBackDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        rightBackDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
+        leftFrontDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        rightFrontDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        leftBackDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        rightBackDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+        // Set the motors to the turn speed.  Direction is important for the turn.
+        leftFrontDrive.setPower(-speed); // Negative for a left turn (adjust as needed)
+        rightFrontDrive.setPower(speed);
+        leftBackDrive.setPower(-speed);
+        rightBackDrive.setPower(speed);
+
+
+        while (opModeIsActive() &&
+               (runtime.seconds() < timeoutS) &&
+               (Math.abs(leftFrontDrive.getCurrentPosition()) < Math.abs(targetCounts))) { // Use abs for turn
+
+            telemetry.addData("Turning", "Degrees: %.2f", degrees);
+            telemetry.addData("Left Front Position",  leftFrontDrive.getCurrentPosition());
+            telemetry.addData("Right Front Position", rightFrontDrive.getCurrentPosition());
+            telemetry.update();
+        }
+
+        // Stop all motion;
+        leftFrontDrive.setPower(0);
+        rightFrontDrive.setPower(0);
+        leftBackDrive.setPower(0);
+        rightBackDrive.setPower(0);
+
+        // Reset encoders for the next movement.
+        leftFrontDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        rightFrontDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        leftBackDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        rightBackDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
+        sleep(1000); // Optional pause after turn.
+    }
+
+    public void encoderDrive(double speed, double leftInches, double rightInches, double timeoutS) {
+        // ... (Same encoderDrive method as the previous example)
+        int newLeftTarget;
+        int newRightTarget;
+
+        // Ensure that the opmode is still active
+        if (opModeIsActive()) {
+
+            // Determine new target position, and pass to motor controller
+            newLeftTarget = leftFrontDrive.getCurrentPosition() + (int)(leftInches * COUNTS_PER_INCH);
+            newRightTarget = rightFrontDrive.getCurrentPosition() + (int)(rightInches * COUNTS_PER_INCH);
+            leftBackDrive.setTargetPosition(newLeftTarget);
+            rightBackDrive.setTargetPosition(newRightTarget);
+            leftFrontDrive.setTargetPosition(newLeftTarget);
+            rightFrontDrive.setTargetPosition(newRightTarget);
+
+
+            // Turn On RUN_TO_POSITION
+            leftFrontDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            rightFrontDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            leftBackDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            rightBackDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+            // reset the timeout time and start motion.
+            runtime.reset();
+            leftFrontDrive.setPower(Math.abs(speed));
+            rightFrontDrive.setPower(Math.abs(speed));
+            leftBackDrive.setPower(Math.abs(speed));
+            rightBackDrive.setPower(Math.abs(speed));
+
+            // keep looping while we are still active, and there is time left, and both motors are busy.
+            while (opModeIsActive() &&
+                   (runtime.seconds() < timeoutS) &&
+                   leftFrontDrive.isBusy() && rightFrontDrive.isBusy()) {
+
+                // Display it for the driver.
+                telemetry.addData("Path1",  "Running to %7d :%7d", newLeftTarget,  newRightTarget);
+                telemetry.addData("Path2",  "Currently at %7d :%7d",
+                                            leftFrontDrive.getCurrentPosition(),
+                                            rightFrontDrive.getCurrentPosition());
+                telemetry.update();
+            }
+
+            // Stop all motion;
+            leftFrontDrive.setPower(0);
+            rightFrontDrive.setPower(0);
+            leftBackDrive.setPower(0);
+            rightBackDrive.setPower(0);
+
+            // Turn off RUN_TO_POSITION
+            leftFrontDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            rightFrontDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            leftBackDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            rightBackDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
+            sleep(250);
+        }
+    }
+}
+
 
