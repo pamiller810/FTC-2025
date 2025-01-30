@@ -1,3 +1,5 @@
+// Add code to hold the UPPArm current position
+
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -61,6 +63,10 @@ public class Android_Studio_Test extends LinearOpMode {
         Vertical_Rack.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         Vertical_Rack.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
+        // Rest and configure upp arm encoder
+        UPPArm_Motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        UPPArm_Motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
         // Motor direction configuration
         BR_Motor.setDirection(DcMotorSimple.Direction.FORWARD);
         FR_Motor.setDirection(DcMotorSimple.Direction.FORWARD);
@@ -105,7 +111,7 @@ public class Android_Studio_Test extends LinearOpMode {
             BR_Motor.setPower(rightBackPower);
 
             // Vertical Rack Control with Limits and Adjusted Speed
-            double verticalRackSpeed = (gamepad2.right_trigger - gamepad2.left_trigger); // Full range of -1 to 1
+            double verticalRackSpeed = (gamepad1.right_trigger - gamepad1.left_trigger); // Full range of -1 to 1
 
             // Ensure correct movement direction for the Vertical Rack Motor
             if (Vertical_Rack.getCurrentPosition() <= minVerticalRackHeight && verticalRackSpeed < 0) {
@@ -120,9 +126,9 @@ public class Android_Studio_Test extends LinearOpMode {
             double uppArmSpeed = -gamepad2.right_stick_y * 0.75; // Adjust speed and invert Y-axis for correct movement direction
 
             // Optional: Add position limits for the UPPArm_Motor (if needed)
-            if (UPPArm_Motor.getCurrentPosition() <= 0 && uppArmSpeed < 0) {
+            if (UPPArm_Motor.getCurrentPosition() <= minUPPArmHeight && uppArmSpeed < 0) {
                 uppArmSpeed = 0; // Prevent moving below 0 (down limit)
-            } else if (UPPArm_Motor.getCurrentPosition() >= 388 && uppArmSpeed > 0) { // Replace 1000 with your own upper limit
+            } else if (UPPArm_Motor.getCurrentPosition() >= maxUPPArmHeight && uppArmSpeed > 0) { // Replace 1000 with your own upper limit
                 uppArmSpeed = 0; // Prevent moving above max height (up limit)
             }
 
