@@ -31,6 +31,10 @@ public class Android_Studio_Test extends LinearOpMode {
     private final int maxVerticalRackHeight = 1818;
     private final int minVerticalRackHeight = 0;
 
+    private final int maxUPPArmHeight = 380;
+    private final int minUPPArmHeight = 0;
+    private final int UPPArm_Pad = 100;
+
     private final double GRABBER_CLOSED = 0.0; // Closed position
     private final double GRABBER_OPEN = 1.0; // Open position
 
@@ -124,7 +128,8 @@ public class Android_Studio_Test extends LinearOpMode {
 
             // UPPArm Control with Limits
             double uppArmSpeed = -gamepad2.right_stick_y * 0.75; // Adjust speed and invert Y-axis for correct movement direction
-
+            double UPPArm_Pos = UPPArm_Motor.getCurrentPosition();
+            
             // Optional: Add position limits for the UPPArm_Motor (if needed)
             if (UPPArm_Motor.getCurrentPosition() <= minUPPArmHeight && uppArmSpeed < 0) {
                 uppArmSpeed = 0; // Prevent moving below 0 (down limit)
@@ -132,6 +137,10 @@ public class Android_Studio_Test extends LinearOpMode {
                 uppArmSpeed = 0; // Prevent moving above max height (up limit)
             }
 
+            if ((uppArmSpeed >= 0.0) && (UPPArm_Pos >= maxUPPArmHeight - UPPArm_Pad)) {
+                uppArmSpeed = ((UPPArm_Motor - UPPArm_Pos)/UPPArm_Pad) * Rack_Power; // Decrease speed as arm approaches limit
+            }
+            
             UPPArm_Motor.setPower(uppArmSpeed);
 
             // Gradual Grabber Control (Open/Close with Triggers)
